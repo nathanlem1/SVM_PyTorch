@@ -5,7 +5,7 @@ L2 (Ridge) and Elastic Net (combination of L1 and L2) based on [Lecture note](ht
 
 We think this repository can be used as a complementary to the [pytorch-tutorial](https://github.com/nathanlem1/pytorch-tutorial) which implements
 traditional supervised machine learning algorithms such as linear regression, logistic regression and feedforward neural 
-network in addition to some advanced useful deep learning methods. In this repository, we implemented the linear SVM.  It is also recommended to look into the [Official Pytorch Tutorial](http://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html) 
+network in addition to some advanced useful deep learning methods. In this repository, we implemented the linear SVM.  It is also recommended to look into the [Official Pytorch Tutorial](https://pytorch.org/tutorials/index.html) 
 to start with if you are a beginner.
 
 
