@@ -184,7 +184,7 @@ def main():
     model = train_model(model, dataloaders, dataset_sizes, criterion, optimizer, exp_lr_scheduler, args)
 
     # Save the model
-    torch.save(model.state_dict(), 'model.pt')
+    torch.save(model.state_dict(), 'model.pth')
 
 
 # Execute from the interpreter
