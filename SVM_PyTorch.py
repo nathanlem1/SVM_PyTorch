@@ -14,7 +14,7 @@ class SVM(nn.Module):
     cross-entropy loss which computes softmax internally, respectively.
     """
     def __init__(self, input_size, num_classes):
-        super(SVM, self).__init__()
+        super(SVM, self).__init__()    # Call the init function of nn.Module
         self.fc = nn.Linear(input_size, num_classes)
 
     def forward(self, x):
@@ -22,23 +22,26 @@ class SVM(nn.Module):
         return out
 
 
-def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, scheduler, args):
+def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, scheduler, other_args):
     """
-    This trains the chosen model (SVM or logistic regression) and with other parameters.
-    :param model:  model to be trained
-    :param dataloaders:  data loader of train and val
-    :param dataset_sizes:  data set sizes of train and val data sets
-    :param criterion:  loss function
-    :param optimizer:  optimization algorithm
-    :param scheduler:  learning scheduler
-    :param args:  required parse arguments such as args.device, args.c, etc
-    :return:  the trained model
+    This function trains the chosen model (SVM or logistic regression) and with other parameters.
+
+    Arguments:
+        model:  model to be trained
+        dataloaders:  data loader of train and val
+        dataset_sizes:  data set sizes of train and val data sets
+        criterion:  loss function
+        optimizer:  optimization algorithm
+        scheduler:  learning scheduler
+        other_args:  required parse arguments such as args.device, args.c, etc
+    Return:
+        model:  the trained model
     """
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
-    for epoch in range(args.num_epochs):
+    for epoch in range(other_args.num_epochs):
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
@@ -52,8 +55,8 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
 
             for i, (images, labels) in enumerate(dataloaders[phase]):
                 # Reshape images to (batch_size, input_size) and then move to device
-                images = images.reshape(-1, args.input_size).to(args.device)
-                labels = labels.to(args.device)
+                images = images.reshape(-1, other_args.input_size).to(other_args.device)
+                labels = labels.to(other_args.device)
 
                 # Forward pass - track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
@@ -63,12 +66,12 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
 
                     # Add regularization i.e.  Full loss = data loss + regularization loss
                     weight = model.fc.weight.squeeze()
-                    if args.rg_type == 'L1':     # add L1 (LASSO - Least Absolute Shrinkage and Selection Operator) loss
-                        loss += args.c * torch.sum(torch.abs(weight))
-                    elif args.rg_type == 'L2':   # add L2 (Ridge) loss
-                        loss += args.c * torch.sum(weight * weight)
-                    elif args.rg_type == 'L1L2':   # add Elastic net (beta*L2 + L1) loss
-                        loss += args.c * torch.sum(args.beta * weight * weight + torch.abs(weight))
+                    if other_args.rg_type == 'L1':     # add L1 (LASSO - Least Absolute Shrinkage and Selection Operator) loss
+                        loss += other_args.c * torch.sum(torch.abs(weight))
+                    elif other_args.rg_type == 'L2':   # add L2 (Ridge) loss
+                        loss += other_args.c * torch.sum(weight * weight)
+                    elif other_args.rg_type == 'L1L2':   # add Elastic net (beta*L2 + L1) loss
+                        loss += other_args.c * torch.sum(other_args.beta * weight * weight + torch.abs(weight))
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -87,7 +90,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
             print('Epoch [{}/{}], {} Loss: {:.4f} Acc: {:.4f}'.format(
-                epoch + 1, args.num_epochs, phase, epoch_loss, epoch_acc*100))
+                epoch + 1, other_args.num_epochs, phase, epoch_loss, epoch_acc*100))
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
