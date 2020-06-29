@@ -1,9 +1,10 @@
+import warnings
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, balanced_accuracy_score
 import matplotlib.pyplot as plt
 
 # SVM model
@@ -44,9 +45,11 @@ learned_model.to(device)
 gt_all = []
 predicted_all = []
 labels_total = list(val_dataset.class_to_idx.values())
+accuracy_method2 = 0
+n_samples = len(val_loader)
 with torch.no_grad(): # For memory efficiency, it is not necessary to compute gradients in test phase.
-    correct = 0
-    total = 0
+    correct = 0.
+    total = 0.
     for images, labels in val_loader:
         images = images.reshape(-1, input_size).to(device)
         labels = labels.to(device)
@@ -60,7 +63,15 @@ with torch.no_grad(): # For memory efficiency, it is not necessary to compute gr
             gt_all.append(labels[i].item())
             predicted_all.append(predicted[i].item())
 
-    print('Accuracy of the model on the 10000 test images is {} %'.format(100 * correct / total))
+        with warnings.catch_warnings():  # sklearn may produce a warning when processing zero row in confusion matrix
+            warnings.simplefilter("ignore")
+            batch_accuracy = balanced_accuracy_score(y_true=labels.cpu().numpy(), y_pred=predicted.cpu().numpy())
+            accuracy_method2 += batch_accuracy
+
+    print('Method1: Accuracy of the model on the 10000 test images is {:.2f} %'.format(100 * correct / total))
+
+    accuracy_method2 /= n_samples
+    print('Method2: Accuracy of the model on the 10000 test images is {:.2f} %'.format(100 * accuracy_method2))
 
 
 # Draw confusion matrices
