@@ -8,6 +8,9 @@ traditional supervised machine learning algorithms such as linear regression, lo
 network in addition to some advanced useful deep learning methods. In this repository, we implemented the linear SVM.  It is also recommended to look into the [Official Pytorch Tutorial](https://pytorch.org/tutorials/index.html) 
 to start with if you are a beginner.
 
+We also include the performance of the learned model on a test data and its performance investigation
+using a confusion matrix.
+
 
 <br/>
 
@@ -16,6 +19,14 @@ to start with if you are a beginner.
 $ git clone https://github.com/nathanlem1/SVM_PyTorch.git
 $ cd SVM_PyTorch
 $ python SVM_PyTorch.py
+```
+To train,
+```bash
+$ python SVM_PyTorch_train.py
+```
+To test,
+```bash
+$ python SVM_PyTorch_test.py
 ```
 
 <br/>
