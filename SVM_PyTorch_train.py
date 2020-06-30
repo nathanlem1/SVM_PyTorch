@@ -90,14 +90,14 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
             print('Epoch [{}/{}], {} Loss: {:.4f} Acc: {:.4f}'.format(
-                epoch + 1, other_args.num_epochs, phase, epoch_loss, epoch_acc*100))
+                epoch + 1, other_args.num_epochs, phase, epoch_loss, epoch_acc*100.))
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
 
-    print('Best val Acc in percentage: {:4f}'.format(best_acc*100))
+    print('Best val Acc in percentage: {:.4f}'.format(best_acc*100.))
 
     # Load best model weights
     model.load_state_dict(best_model_wts)

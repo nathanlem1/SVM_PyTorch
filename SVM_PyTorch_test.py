@@ -23,15 +23,15 @@ class SVM(nn.Module):
 
 
 # MNIST dataset (images and labels) for testing a trained model
-val_dataset = torchvision.datasets.MNIST(root='./data',
+test_dataset = torchvision.datasets.MNIST(root='./data',
                                          train=False,
                                          transform=transforms.ToTensor())
-val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
+test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
                                          batch_size=4,
                                          shuffle=False)
 
-num_classes = len(val_dataset.classes)  # 10 for MNIST
-input_size = val_loader.dataset.data[0].reshape(1,-1).size()[1] # input_size = 28*28 = 784 for MNIST
+num_classes = len(test_dataset.classes)  # 10 for MNIST
+input_size = test_loader.dataset.data[0].reshape(1,-1).size()[1] # input_size = 28*28 = 784 for MNIST
                                                                       # Vectorize the input for fully connected network
 
 # Load the trained model
@@ -44,19 +44,18 @@ learned_model.to(device)
 # Analyze the model performance on validation set treating it as a testing set by using confusion matrix
 gt_all = []
 predicted_all = []
-labels_total = list(val_dataset.class_to_idx.values())
-accuracy_method2 = 0
-n_samples = len(val_loader)
+labels_total = list(test_dataset.class_to_idx.values())
+accuracy_method2 = 0.
+n_samples = len(test_loader)
+n_total = len(test_dataset)
 with torch.no_grad(): # For memory efficiency, it is not necessary to compute gradients in test phase.
     correct = 0.
-    total = 0.
-    for images, labels in val_loader:
+    for images, labels in test_loader:
         images = images.reshape(-1, input_size).to(device)
         labels = labels.to(device)
 
         outputs = learned_model(images)
         _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
         correct += (predicted == labels).sum()
 
         for i in range(images.shape[0]):
@@ -68,10 +67,10 @@ with torch.no_grad(): # For memory efficiency, it is not necessary to compute gr
             batch_accuracy = balanced_accuracy_score(y_true=labels.cpu().numpy(), y_pred=predicted.cpu().numpy())
             accuracy_method2 += batch_accuracy
 
-    print('Method1: Accuracy of the model on the 10000 test images is {:.2f} %'.format(100 * correct / total))
+    print('Method1: Accuracy of the model on the 10000 test images is {:.4f} %'.format(100. * correct / n_total))
 
     accuracy_method2 /= n_samples
-    print('Method2: Accuracy of the model on the 10000 test images is {:.2f} %'.format(100 * accuracy_method2))
+    print('Method2: Accuracy of the model on the 10000 test images is {:.4f} %'.format(100. * accuracy_method2))
 
 
 # Draw confusion matrices
