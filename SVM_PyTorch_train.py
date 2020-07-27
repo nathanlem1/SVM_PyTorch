@@ -66,7 +66,8 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
 
                     # Add regularization i.e.  Full loss = data loss + regularization loss
                     weight = model.fc.weight.squeeze()
-                    if other_args.rg_type == 'L1':     # add L1 (LASSO - Least Absolute Shrinkage and Selection Operator) loss
+                    if other_args.rg_type == 'L1':  # add L1 (LASSO - Least Absolute Shrinkage and Selection Operator)
+                                                    # loss which leads to sparsity.
                         loss += other_args.c * torch.sum(torch.abs(weight))
                     elif other_args.rg_type == 'L2':   # add L2 (Ridge) loss
                         loss += other_args.c * torch.sum(weight * weight)

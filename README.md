@@ -1,7 +1,7 @@
 This repository implements a linear Support Vector Machine (SVM) using [PyTorch](https://github.com/pytorch/pytorch). The linear SVM can be implemented using fully connected layer and multi-class
 classification hinge loss in PyTorch. We also include a logistic regression which uses cross-entropy loss which internally
-computes softmax. In this implementation, we also include regularization techniques such as L1 (LASSO - Least Absolute Shrinkage and Selection Operator), 
-L2 (Ridge) and Elastic Net (combination of L1 and L2) based on [Lecture note](http://cs231n.stanford.edu/slides/2020/lecture_3.pdf). 
+computes softmax. In this implementation, we also include regularization techniques such as L1 (LASSO - Least Absolute Shrinkage and Selection Operator)
+which leads to sparsity, L2 (Ridge) and Elastic Net (combination of L1 and L2) based on [Lecture note](http://cs231n.stanford.edu/slides/2020/lecture_3.pdf). 
 
 We think this repository can be used as a complementary to the [pytorch-tutorial](https://github.com/nathanlem1/pytorch-tutorial) which implements
 traditional supervised machine learning algorithms such as linear regression, logistic regression and feedforward neural 
