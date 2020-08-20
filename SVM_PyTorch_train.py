@@ -175,7 +175,7 @@ def main():
 
     # Loss and optimizer
     if args.classification_type == 'svm':
-        criterion = nn.MultiMarginLoss()  # Multi-class classification hinge loss (margine-based loss); SVM
+        criterion = nn.MultiMarginLoss()  # Multi-class classification hinge loss (margin-based loss); SVM
     elif args.classification_type == 'logisticR':
         criterion = nn.CrossEntropyLoss()  # Cross-entropy loss which computes softmax internally; logistic regression
 
