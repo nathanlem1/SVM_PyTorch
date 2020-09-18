@@ -1,11 +1,12 @@
 import warnings
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, balanced_accuracy_score
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, balanced_accuracy_score
-import matplotlib.pyplot as plt
 
 # SVM model
 class SVM(nn.Module):
@@ -24,18 +25,18 @@ class SVM(nn.Module):
 
 # MNIST dataset (images and labels) for testing a trained model
 test_dataset = torchvision.datasets.MNIST(root='./data',
-                                         train=False,
-                                         transform=transforms.ToTensor())
+                                          train=False,
+                                          transform=transforms.ToTensor())
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-                                         batch_size=4,
-                                         shuffle=False)
+                                          batch_size=4,
+                                          shuffle=False)
 
 num_classes = len(test_dataset.classes)  # 10 for MNIST
-input_size = test_loader.dataset.data[0].reshape(1,-1).size()[1] # input_size = 28*28 = 784 for MNIST
-                                                                      # Vectorize the input for fully connected network
+input_size = test_loader.dataset.data[0].reshape(1, -1).size()[1]  # input_size = 28*28 = 784 for MNIST i.e. vectorized
+# the input for fully connected network.
 
 # Load the trained model
-learned_model = SVM(input_size,num_classes)
+learned_model = SVM(input_size, num_classes)
 learned_model.load_state_dict(torch.load('./model.pth'))
 learned_model.eval()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -48,7 +49,7 @@ labels_total = list(test_dataset.class_to_idx.values())
 accuracy_method2 = 0.
 n_samples = len(test_loader)
 n_total = len(test_dataset)
-with torch.no_grad(): # For memory efficiency, it is not necessary to compute gradients in test phase.
+with torch.no_grad():  # For memory efficiency, it is not necessary to compute gradients in test phase.
     correct = 0.
     for images, labels in test_loader:
         images = images.reshape(-1, input_size).to(device)
@@ -56,7 +57,7 @@ with torch.no_grad(): # For memory efficiency, it is not necessary to compute gr
 
         outputs = learned_model(images)
         _, predicted = torch.max(outputs.data, 1)
-        correct += (predicted == labels).sum()
+        correct += (predicted == labels).cpu().numpy().sum()
 
         for i in range(images.shape[0]):
             gt_all.append(labels[i].item())
@@ -80,6 +81,7 @@ cn_matrix = confusion_matrix(
     labels=labels_total,
     normalize='true')
 ConfusionMatrixDisplay(cn_matrix).plot(include_values=False, xticks_rotation='vertical')
+
 plt.title("Confusion matrix")
 plt.tight_layout()
 plt.show()

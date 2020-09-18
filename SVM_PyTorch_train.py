@@ -1,11 +1,12 @@
+import argparse
+import copy
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import torchvision
 import torchvision.transforms as transforms
-import argparse
-import copy
 
 
 class SVM(nn.Module):
@@ -22,13 +23,13 @@ class SVM(nn.Module):
         return out
 
 
-def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, scheduler, other_args):
+def train_model(model, data_loaders, dataset_sizes, criterion, optimizer, scheduler, other_args):
     """
     This function trains the chosen model (SVM or logistic regression) and with other parameters.
 
     Arguments:
         model:  model to be trained
-        dataloaders:  data loader of train and val
+        data_loaders:  data loader of train and val
         dataset_sizes:  data set sizes of train and val data sets
         criterion:  loss function
         optimizer:  optimization algorithm
@@ -53,7 +54,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
             running_loss = 0.0
             running_corrects = 0
 
-            for i, (images, labels) in enumerate(dataloaders[phase]):
+            for i, (images, labels) in enumerate(data_loaders[phase]):
                 # Reshape images to (batch_size, input_size) and then move to device
                 images = images.reshape(-1, other_args.input_size).to(other_args.device)
                 labels = labels.to(other_args.device)
@@ -67,7 +68,8 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
                     # Add regularization i.e.  Full loss = data loss + regularization loss
                     weight = model.fc.weight.squeeze()
                     if other_args.rg_type == 'L1':  # add L1 (LASSO - Least Absolute Shrinkage and Selection Operator)
-                                                    # loss which leads to sparsity.
+                        # loss which leads to sparsity.
+
                         loss += other_args.c * torch.sum(torch.abs(weight))
                     elif other_args.rg_type == 'L2':   # add L2 (Ridge) loss
                         loss += other_args.c * torch.sum(weight * weight)
@@ -82,13 +84,13 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
 
                 # Collect statistics
                 running_loss += loss.item() * images.size(0)  # images.size(0) is batch size.
-                running_corrects += torch.sum(preds == labels.data)
+                running_corrects += torch.sum(preds == labels.data).cpu().numpy()
 
             if phase == 'train':
                 scheduler.step()
 
             epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = running_corrects.double() / dataset_sizes[phase]
+            epoch_acc = running_corrects / dataset_sizes[phase]
 
             print('Epoch [{}/{}], {} Loss: {:.4f} Acc: {:.4f}'.format(
                 epoch + 1, other_args.num_epochs, phase, epoch_loss, epoch_acc*100.))
@@ -106,7 +108,6 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
     return model
 
 
-
 def main():
     """
     Main function to run the linear SVM using hinge loss or logistic regression using softmax loss (cross-entropy loss)
@@ -121,7 +122,7 @@ def main():
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Initial learning rate for training')
     parser.add_argument('--c', type=float, default=0.01,
-                        help= 'Regularization parameter')
+                        help='Regularization parameter')
     parser.add_argument('--beta', type=float, default=1.0,
                         help='Mixing parameter for Elastic net regularization')
     parser.add_argument('--rg_type', type=str, default='', choices=['L1', 'L2', 'L1L2'],
@@ -145,8 +146,8 @@ def main():
                                                download=True)
 
     val_dataset = torchvision.datasets.MNIST(root='./data',
-                                              train=False,
-                                              transform=transforms.ToTensor())
+                                             train=False,
+                                             transform=transforms.ToTensor())
 
     # Data loader (input pipeline)
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
@@ -154,19 +155,20 @@ def main():
                                                shuffle=True)
 
     val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
-                                              batch_size=args.batch_size,
-                                              shuffle=False)
-    dataloaders = {}
-    dataloaders['train'] = train_loader
-    dataloaders['val'] = val_loader
+                                             batch_size=args.batch_size,
+                                             shuffle=False)
+    data_loaders = dict()
+    data_loaders['train'] = train_loader
+    data_loaders['val'] = val_loader
 
-    dataset_sizes = {}
+    dataset_sizes = dict()
     dataset_sizes['train'] = len(train_dataset)
     dataset_sizes['val'] = len(val_dataset)
 
-    num_classes = len(dataloaders['train'].dataset.classes)  # 10 for MNIST
-    input_size = train_loader.dataset.data[0].reshape(1,-1).size()[1] # input_size = 28*28 = 784 for MNIST
-                                                                      # Vectorize the input for fully connected network
+    num_classes = len(data_loaders['train'].dataset.classes)  # 10 for MNIST
+    input_size = train_loader.dataset.data[0].reshape(1, -1).size()[1]  # input_size = 28*28 = 784 for MNIST i.e.
+    # vectorized the input for fully connected network.
+
     args.input_size = input_size
 
     # Initialized the model to be trained: SVM or Logistic regression
@@ -185,7 +187,7 @@ def main():
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
     # Train the model
-    model = train_model(model, dataloaders, dataset_sizes, criterion, optimizer, exp_lr_scheduler, args)
+    model = train_model(model, data_loaders, dataset_sizes, criterion, optimizer, exp_lr_scheduler, args)
 
     # Save the model
     torch.save(model.state_dict(), 'model.pth')
@@ -194,6 +196,3 @@ def main():
 # Execute from the interpreter
 if __name__ == "__main__":
     main()
-
-
-
