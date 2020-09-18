@@ -153,7 +153,8 @@ def main():
                                              train=False,
                                              transform=transforms.ToTensor())
 
-    # Data loader (input pipeline)
+    # Data loader (input pipeline) i.e. Using torch.utils.data.DataLoader, we can obtain two iterators
+    # data_loaders['train'] and data_loaders['val'] to read data (images) and labels.
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                batch_size=args.batch_size,
                                                shuffle=True)
