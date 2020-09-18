@@ -13,6 +13,10 @@ class SVM(nn.Module):
     """
     Using fully connected neural network to implement linear SVM and Logistic regression with hinge loss and
     cross-entropy loss which computes softmax internally, respectively.
+
+    Arguments:
+        input_size: The input size
+        num_classes: Number of classes
     """
     def __init__(self, input_size, num_classes):
         super(SVM, self).__init__()    # Call the init function of nn.Module
