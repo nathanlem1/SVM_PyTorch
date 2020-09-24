@@ -1,12 +1,26 @@
 import argparse
 import copy
+import os
 
+import matplotlib
+import matplotlib.pyplot as plt
 import torch
+import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import torchvision
 import torchvision.transforms as transforms
+import yaml
+matplotlib.use('agg')
+
+# fp16
+try:
+    from apex.fp16_utils import *
+    from apex import amp, optimizers
+except ImportError:  # will be 3.x series
+    print('This is not an error! If you want to use low precision, i.e., fp16, please install the apex with cuda \
+          support (https://github.com/NVIDIA/apex) and update pytorch to >= 1.0')
 
 
 class SVM(nn.Module):
@@ -25,6 +39,34 @@ class SVM(nn.Module):
     def forward(self, x):
         out = self.fc(x)
         return out
+
+
+# Draw Curve
+x_epoch = []
+fig = plt.figure()
+ax0 = fig.add_subplot(121, title="loss")
+ax1 = fig.add_subplot(122, title="top1err")
+
+
+def plot_curve(current_epoch):
+    x_epoch.append(current_epoch)
+    ax0.plot(x_epoch, y_loss['train'], 'bo-', label='train')
+    ax0.plot(x_epoch, y_loss['val'], 'ro-', label='val')
+    ax1.plot(x_epoch, y_err['train'], 'bo-', label='train')
+    ax1.plot(x_epoch, y_err['val'], 'ro-', label='val')
+    if current_epoch == 0:
+        ax0.legend()
+        ax1.legend()
+    fig.savefig(os.path.join('./model', 'train_plot.jpg'))
+
+
+# Loss history and top-1 error history
+y_loss = dict()
+y_loss['train'] = []
+y_loss['val'] = []
+y_err = dict()
+y_err['train'] = []
+y_err['val'] = []
 
 
 def train_model(model, data_loaders, dataset_sizes, criterion, optimizer, scheduler, other_args):
@@ -80,10 +122,14 @@ def train_model(model, data_loaders, dataset_sizes, criterion, optimizer, schedu
                     elif other_args.rg_type == 'L1L2':   # add Elastic net (beta*L2 + L1) loss
                         loss += other_args.c * torch.sum(other_args.beta * weight * weight + torch.abs(weight))
 
-                    # backward + optimize only if in training phase
+                    # Backward + optimize only if in training phase
                     if phase == 'train':
                         optimizer.zero_grad()
-                        loss.backward()
+                        if other_args.fp16:  # we use optimizer to backward loss
+                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                                scaled_loss.backward()
+                        else:
+                            loss.backward()
                         optimizer.step()
 
                 # Collect statistics
@@ -99,7 +145,15 @@ def train_model(model, data_loaders, dataset_sizes, criterion, optimizer, schedu
             print('Epoch [{}/{}], {} Loss: {:.4f} Acc: {:.4f}'.format(
                 epoch + 1, other_args.num_epochs, phase, epoch_loss, epoch_acc*100.))
 
-            # deep copy the model
+            # Store loss history and top-1 error history
+            y_loss[phase].append(epoch_loss)
+            y_err[phase].append(1.0 - epoch_acc)
+
+            # Plot curve
+            if phase == 'val':
+                plot_curve(epoch)
+
+            # Deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
@@ -137,11 +191,19 @@ def main():
                         help='Number of workers to use in data loading')
     parser.add_argument('--input_size', type=int, default=784,
                         help='Number of input size for training and validation dataset')
+    parser.add_argument('--fp16', action='store_true',
+                        help='Use float16 instead of float32, which can save about 50% memory usage without accuracy \
+                             drop')
     parser.add_argument('--device', default='cuda', choices=['cpu', 'cuda'])
     args = parser.parse_args()
     args.device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 
     print(args)
+
+    # Use cudnn backend
+    if args.device.type == 'cuda':
+        cudnn.benchmark = True  # This flag allows you to enable the inbuilt cudnn auto-tuner to find the best algorithm
+        # to use for your hardware.
 
     # MNIST dataset (images and labels)
     train_dataset = torchvision.datasets.MNIST(root='./data',
@@ -188,6 +250,10 @@ def main():
 
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
 
+    # Use fp16. It can be used by simply adding --fp16 i.e. $ python3 SVM_train.py --fp16
+    if args.fp16:
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+
     # Decay LR by a factor of 0.1 every 10 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
@@ -195,7 +261,11 @@ def main():
     model = train_model(model, data_loaders, dataset_sizes, criterion, optimizer, exp_lr_scheduler, args)
 
     # Save the model
-    torch.save(model.state_dict(), 'model.pth')
+    torch.save(model.state_dict(), './model/model.pth')
+
+    # Save the used args
+    with open('./model/used_args.yaml', 'w') as fp:
+        yaml.dump(vars(args), fp, default_flow_style=False)
 
 
 # Execute from the interpreter

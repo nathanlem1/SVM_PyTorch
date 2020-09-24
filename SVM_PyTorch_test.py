@@ -41,7 +41,7 @@ input_size = test_loader.dataset.data[0].reshape(1, -1).size()[1]  # input_size 
 
 # Load the trained model
 learned_model = SVM(input_size, num_classes)
-learned_model.load_state_dict(torch.load('./model.pth'))
+learned_model.load_state_dict(torch.load('./model/model.pth'))
 learned_model.eval()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 learned_model.to(device)
