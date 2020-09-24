@@ -2,7 +2,7 @@
 model/
 logs/
 __pycache__/
-data
+data/
 
 # Compiled source #
 ###################
