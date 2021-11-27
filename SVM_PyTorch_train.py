@@ -106,7 +106,6 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, schedul
     return model
 
 
-
 def main():
     """
     Main function to run the linear SVM using hinge loss or logistic regression using softmax loss (cross-entropy loss)
@@ -156,11 +155,11 @@ def main():
     val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
                                               batch_size=args.batch_size,
                                               shuffle=False)
-    dataloaders = {}
+    dataloaders = dict()
     dataloaders['train'] = train_loader
     dataloaders['val'] = val_loader
 
-    dataset_sizes = {}
+    dataset_sizes = dict()
     dataset_sizes['train'] = len(train_dataset)
     dataset_sizes['val'] = len(val_dataset)
 
