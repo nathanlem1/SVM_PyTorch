@@ -3,6 +3,7 @@ model/
 logs/
 __pycache__/
 data/
+.idea/
 
 # Compiled source #
 ###################
