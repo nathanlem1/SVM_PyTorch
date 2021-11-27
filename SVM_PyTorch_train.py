@@ -25,7 +25,6 @@ class SVM(nn.Module):
 def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, scheduler, other_args):
     """
     This function trains the chosen model (SVM or logistic regression) and with other parameters.
-
     Arguments:
         model:  model to be trained
         dataloaders:  data loader of train and val
@@ -120,7 +119,7 @@ def main():
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Initial learning rate for training')
     parser.add_argument('--c', type=float, default=0.01,
-                        help= 'Regularization parameter')
+                        help='Regularization parameter')
     parser.add_argument('--beta', type=float, default=1.0,
                         help='Mixing parameter for Elastic net regularization')
     parser.add_argument('--rg_type', type=str, default='', choices=['L1', 'L2', 'L1L2'],
@@ -144,8 +143,8 @@ def main():
                                                download=True)
 
     val_dataset = torchvision.datasets.MNIST(root='./data',
-                                              train=False,
-                                              transform=transforms.ToTensor())
+                                             train=False,
+                                             transform=transforms.ToTensor())
 
     # Data loader (input pipeline)
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
@@ -153,8 +152,8 @@ def main():
                                                shuffle=True)
 
     val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
-                                              batch_size=args.batch_size,
-                                              shuffle=False)
+                                             batch_size=args.batch_size,
+                                             shuffle=False)
     dataloaders = dict()
     dataloaders['train'] = train_loader
     dataloaders['val'] = val_loader
@@ -164,8 +163,8 @@ def main():
     dataset_sizes['val'] = len(val_dataset)
 
     num_classes = len(dataloaders['train'].dataset.classes)  # 10 for MNIST
-    input_size = train_loader.dataset.data[0].reshape(1,-1).size()[1] # input_size = 28*28 = 784 for MNIST
-                                                                      # Vectorize the input for fully connected network
+    input_size = train_loader.dataset.data[0].reshape(1, -1).size()[1]  # input_size = 28*28 = 784 for MNIST
+                                                                        # Vectorize the input for fully connected network
     args.input_size = input_size
 
     # Initialized the model to be trained: SVM or Logistic regression
@@ -193,6 +192,3 @@ def main():
 # Execute from the interpreter
 if __name__ == "__main__":
     main()
-
-
-
