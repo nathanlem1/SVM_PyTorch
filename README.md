@@ -34,6 +34,7 @@ $ python SVM_PyTorch_test.py
 ## Dependencies
 * [Python 3.5+](https://www.python.org/downloads/)
 * [PyTorch 0.4.0+](http://pytorch.org/)
+* [scikit-learn](https://scikit-learn.org/stable/)
 
 
 
