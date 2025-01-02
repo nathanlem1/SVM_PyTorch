@@ -18,7 +18,6 @@ using a confusion matrix.
 ```bash
 $ git clone https://github.com/nathanlem1/SVM_PyTorch.git
 $ cd SVM_PyTorch
-$ python SVM_PyTorch.py
 ```
 To train,
 ```bash
